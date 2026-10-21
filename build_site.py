@@ -6,13 +6,13 @@ OG=lambda t,d,img,path:f'''<meta property="og:type" content="website"><meta prop
 # hub
 h=R('/home/claude/hub/page.html')
 h=h.replace('<script>\n','<script>\n'+sb+'\n',1)
-h=h.replace('<meta name="claude:viewport-fit-sides" content="cover">','<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+OG('منصة الصحة المدرسية - القطاع الشمالي','مؤشرات إنجاز الصحة المدرسية لمراكز القطاع الشمالي - تجمع جازان الصحي','og-platform.png','/'),1)
+h=h.replace('<meta name="claude:viewport-fit-sides" content="cover">','<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+OG('منصة الصحة المدرسية - القطاع الشمالي','مؤشرات إنجاز الصحة المدرسية لمراكز القطاع الشمالي - تجمع جازان الصحي','https://school-health-north.pages.dev/og-platform.png','/'),1)
 open('index.html','w',encoding='utf8').write(h)
 # salama
 s=R('/home/claude/web/page.html')
 s=s.replace('<script>','<script>\n'+sb+'\n',1)
 if 'name="viewport"' not in s:
     s=s.replace('<head>','<head><meta name="viewport" content="width=device-width,initial-scale=1">',1)
-s=s.replace('</title>','</title>'+OG('لوحة إنجاز الصحة المدرسية - مركز السلامه العليا','متابعة مؤشرات الصحة المدرسية لمدارس مركز السلامه العليا','../og-salama.png','/salama/'),1)
+s=s.replace('</title>','</title>'+OG('لوحة إنجاز الصحة المدرسية - مركز السلامه العليا','متابعة مؤشرات الصحة المدرسية لمدارس مركز السلامه العليا','https://school-health-north.pages.dev/og-salama.png','/salama/'),1)
 open('salama/index.html','w',encoding='utf8').write(s)
 print(len(h),len(s))
