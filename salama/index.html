@@ -123,7 +123,7 @@ td.cn{color:var(--muted)}
 <script>
 /* محوّل Supabase: يوفّر نفس واجهة claude.use('db'|'user'|'downloads') لتعمل المنصتان خارج Claude */
 (function(){
-var URL_='https://rzrwbrgebcylixjciega.supabase.co',KEY='__ANON__',SK='sh_sb_session';
+var URL_='https://rzrwbrgebcylixjciega.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6cndicmdlYmN5bGl4amNpZWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MDc2MTEsImV4cCI6MjEwODE4MzYxMX0.Pz_g-v5CpZV-sGJ3TyOumyM_gFap86vgs_oWW3DPPtc',SK='sh_sb_session';
 var sess=null;try{sess=JSON.parse(localStorage.getItem(SK)||'null')}catch(e){}
 function jwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch(e){return {}}}
 function owner(){return !!(sess&&sess.access_token&&jwt(sess.access_token).app_metadata&&jwt(sess.access_token).app_metadata.role==='owner'&&jwt(sess.access_token).exp*1000>Date.now()-60000)}
