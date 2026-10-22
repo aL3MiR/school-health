@@ -29,5 +29,12 @@ create policy log_owner on public.log for all
   using ((auth.jwt()->'app_metadata'->>'role') = 'owner')
   with check ((auth.jwt()->'app_metadata'->>'role') = 'owner');
 
+-- صلاحيات الأدوار (مطلوبة مع RLS)
+grant usage on schema public to anon, authenticated;
+grant select on public.centers to anon, authenticated;
+grant insert, update, delete on public.centers to authenticated;
+grant select, insert, update, delete on public.log to authenticated;
+notify pgrst, 'reload schema';
+
 -- بعد إنشاء مستخدم المشرف من Authentication > Users، شغّل هذا السطر (غيّر البريد):
 -- update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data,'{}'::jsonb) || '{"role":"owner"}'::jsonb where email = 'frodo-2@hotmail.com';
