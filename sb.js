@@ -6,7 +6,7 @@ function jwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').rep
 function owner(){return !!(sess&&sess.access_token&&jwt(sess.access_token).app_metadata&&jwt(sess.access_token).app_metadata.role==='owner'&&jwt(sess.access_token).exp*1000>Date.now()-60000)}
 async function refresh(){if(!sess||!sess.refresh_token)return;try{var r=await fetch(URL_+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:sess.refresh_token})});if(r.ok){sess=await r.json();localStorage.setItem(SK,JSON.stringify(sess))}else{sess=null;localStorage.removeItem(SK)}}catch(e){}}
 async function ensure(){if(sess&&jwt(sess.access_token).exp*1000<Date.now()+60000)await refresh()}
-async function api(path,opt){await ensure();opt=opt||{};var h=Object.assign({apikey:KEY,Authorization:'Bearer '+((sess&&sess.access_token)||KEY),'Content-Type':'application/json'},opt.headers||{});var r=await fetch(URL_+'/rest/v1/'+path,Object.assign({},opt,{headers:h}));if(!r.ok){var e=new Error('http '+r.status);e.code=r.status;throw e}return r.status===204?null:r.json()}
+async function api(path,opt){await ensure();opt=opt||{};var h=Object.assign({apikey:KEY,Authorization:'Bearer '+((sess&&sess.access_token)||KEY),'Content-Type':'application/json'},opt.headers||{});var r=await fetch(URL_+'/rest/v1/'+path,Object.assign({},opt,{headers:h}));if(!r.ok){var t='';try{t=(await r.text()).slice(0,200)}catch(x){}var e=new Error(r.status+' '+t);e.code=r.status;throw e}return r.status===204?null:r.json()}
 function snapDoc(row){return {id:row.id,data:function(){return row.data}}}
 var DB={
  doc:function(p){var a=p.split('/'),t=a[0],id=a[1];return{
