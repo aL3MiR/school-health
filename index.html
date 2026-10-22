@@ -1044,7 +1044,7 @@ function step1(){
         if(snap.exists){const d=snap.data();let st=null;try{st=JSON.parse(d.state);}catch(e){}
           if(st&&st.center){S=st;loaded=true;S.center.cid=cid;S.center.name=name;note.textContent='تم فتح العمل المحفوظ لـ'+FN(name)+' (آخر تحديث '+new Date(d.updated).toLocaleDateString('ar-SA')+'، '+S.schools.length+' مدرسة). أكمل من حيث توقفت.';}
         }else note.textContent='لا يوجد عمل محفوظ لـ'+FN(name)+' بعد. ابدأ بتعبئة البيانات.';}
-      catch(e){note.textContent='تعذّر قراءة العمل المحفوظ. يمكنك البدء من جديد.';}
+      catch(e){console.error(e);note.textContent='تعذّر قراءة العمل المحفوظ ('+((e&&(e.code||e.message))||'خطأ')+'). يمكنك البدء من جديد.';}
     }
     paintRest();setStatus(DB&&OWN?'saved':'local');if(!loaded)dirty();
   };
