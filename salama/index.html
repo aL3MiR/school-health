@@ -269,11 +269,17 @@ function renderFiles(){
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button type="button" class="fbtn" id="vback"><span></span> ← العودة للوحة الإنجاز</button>';
   if(V.f.length>1)h+='<button type="button" class="fbtn pri" id="vzip"><span></span> تحميل الكل (ملف واحد)</button>';
   h+='</div><div class="fgrid">';
-  V.f.forEach(function(f,i){h+='<div class="fcard">'+DOCICON+'<b>'+f[2]+'</b><span class="d">'+f[3]+'</span><button type="button" class="fbtn" data-i="'+i+'"><span></span> تحميل الملف</button></div>'});
+  var FITURL='https://istitla.moh.gov.sa/SurveySubmissions/ede3bb91-549c-4708-cd6b-08dde9f0dd2a';
+  var PH=['ليس لديه رقم إقامة ورقم حدود','لديه معاملة في وزارة الداخلية ويسجل الرقم'];
+  var FITX='<div style="background:var(--bad-bg);border:1px solid var(--bad);color:var(--bad);border-radius:12px;padding:10px 12px;line-height:1.9;font-size:14px"><b>تنبيه: </b>تُخصَّص هذه الاستمارة فقط للطلبة المخالفين لأنظمة الإقامة وأمن الحدود وفئة البدون غير المعرَّفين في «منصة صحة»، ولا تُعطى لأي فئة أخرى.</div>'
+   +'<div style="font-size:14px"><b>الخطوات</b><ol style="margin:6px 0 0;padding-inline-start:20px;line-height:2"><li>عبّئ الاستمارة الورقية المرفقة.</li><li>ارفع نسخة منها عبر منصة استطلاع (الزر أدناه).</li><li>سلّم نسخة من الاستمارة الورقية لولي أمر الطالب بعد الفحص.</li></ol></div>'
+   +'<div style="background:var(--strip);border-radius:12px;padding:10px 12px;font-size:14px"><b>اكتب هذه العبارة أعلى الاستمارة</b>'+PH.map(function(t,k){return '<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span style="flex:1;line-height:1.8">«'+t+'»</span><button type="button" class="fbtn cpy" data-k="'+k+'">نسخ</button></div>'}).join('')+'</div>';
+  V.f.forEach(function(f,i){var fit=f[0]==='form-fitness-exempt.pdf';h+='<div class="fcard">'+DOCICON+'<b>'+f[2]+'</b><span class="d">'+f[3]+'</span>'+(fit?FITX:'')+'<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="fbtn" data-i="'+i+'"><span></span> تحميل الملف</button>'+(fit?'<a class="fbtn" href="'+FITURL+'" target="_blank" rel="noopener" style="text-decoration:none">فتح منصة استطلاع</a>':'')+'</div></div>'});
   h+='</div>';$('main').innerHTML=h;
   $('vback').onclick=function(){setView('dash')};
   var z=$('vzip');if(z)z.onclick=function(){zipSave(V.f,V.z,z)};
-  Array.prototype.forEach.call(document.querySelectorAll('.fcard .fbtn'),function(b){b.onclick=function(){var f=V.f[+b.dataset.i];fileSave(f[0],f[1],b)}});
+  Array.prototype.forEach.call(document.querySelectorAll('.fcard .fbtn[data-i]'),function(b){b.onclick=function(){var f=V.f[+b.dataset.i];fileSave(f[0],f[1],b)}});
+  Array.prototype.forEach.call(document.querySelectorAll('.cpy'),function(b){b.onclick=async function(){var t=PH[+b.dataset.k];try{await navigator.clipboard.writeText(t)}catch(x){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(y){}a.remove()}b.textContent='تم النسخ';setTimeout(function(){b.textContent='نسخ'},1500)}});
 }
 Array.prototype.forEach.call(document.querySelectorAll('.vw'),function(b){b.onclick=function(){setView(VIEW===b.dataset.view?'dash':b.dataset.view)}});
 function fmtDate(iso){try{return new Date(iso).toLocaleDateString('ar-EG-u-nu-latn',{day:'numeric',month:'long',year:'numeric'})}catch(e){return iso}}
