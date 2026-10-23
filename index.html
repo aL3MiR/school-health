@@ -503,7 +503,7 @@ function buildTemplateXlsx(S){
   // 1) بيانات المركز
   const w1=B.sheet(TPL.c,{tab:COL.navy});w1.cols=[28,46];
   head(w1,'الصحة المدرسية — بيانات المركز','اختر اسم المركز من القائمة، واكتب بقية البيانات في الخانات الصفراء. ثم انتقل إلى الصفحات التالية بالترتيب.',2,COL.navy);
-  const rows=[['المركز (اختر من القائمة)',c.name||''],['الرقم الوزاري للمركز',c.ministry||''],['مدير المركز',c.director||''],['المنسق الصحي',c.coordM||''],['المنسقة الصحية',c.coordF||'']];
+  const rows=[['المركز (اختر من القائمة)',c.name||''],['الرقم الوزاري للمركز',c.ministry||''],['مدير/ة المركز',c.director||''],['المنسق الصحي',c.coordM||''],['المنسقة الصحية',c.coordF||'']];
   rows.forEach((r,i)=>{w1.set(3+i,0,r[0],LB);w1.set(3+i,1,r[1],IN);w1.height(3+i,28);});
   w1.set(8,0,'عدد المدارس (يُحسب تلقائياً)',LB);w1.set(8,1,{f:'COUNTA('+S2+'B'+a1+':B'+aN+')',v:sch.length},{b:1,c:COL.teal,bg:'F4F7FA',bd:1,sz:13});w1.height(8,28);
   w1.dv=[{sqref:'B4',list:CENTERS.join(',')}];
@@ -595,7 +595,7 @@ function buildCenterXlsx(S,logoB64){
   d.merge(2,1,2,12,'الصحة المدرسية لوحة متابعة الإنجاز\n'+(c.period||''),{b:1,c:'FFFFFF',bg:COL.navy,sz:19});d.height(2,62);
   d.merge(3,1,3,4,'منسق الصحة المدرسية بالمركز:\n'+(c.coordM||'—'),{b:1,c:COL.navy,bg:COL.strip,sz:10});
   d.merge(3,5,3,8,'منسقة الصحة المدرسية بالمركز:\n'+(c.coordF||'—'),{b:1,c:COL.navy,bg:COL.strip,sz:10});
-  d.merge(3,9,3,12,'مديرة المركز:\n'+(c.director||'—'),{b:1,c:COL.navy,bg:COL.strip,sz:10});d.height(3,40);
+  d.merge(3,9,3,12,'مدير/ة المركز:\n'+(c.director||'—'),{b:1,c:COL.navy,bg:COL.strip,sz:10});d.height(3,40);
   d.merge(4,1,4,12,'الرقم الوزاري للمركز: '+(c.ministry||'—'),{b:1,c:'F3D77A',bg:'16405F',sz:12});d.height(4,24);
   let r=6;
   const sec=(t)=>{d.merge(r,1,r,12,t,{b:1,c:COL.navy,sz:13,h:'right'});d.height(r,26);r++;};
@@ -744,7 +744,7 @@ async function renderReport(S,A){ // A:{logo,wave,type,me}
     T(title,PW/2,206,{sz:40,w:700,c:'#fff',a:'center'});T(c.period||'',PW/2,247,{sz:25,c:'#F3D77A',a:'center'});
     // strip
     const cw=(PW-120-18)/4,sy=282;
-    [['منسق الصحة المدرسية',c.coordM],['منسقة الصحة المدرسية',c.coordF],['مديرة المركز',c.director],['الرقم الوزاري للمركز',c.ministry]].forEach((s,i)=>{
+    [['منسق الصحة المدرسية',c.coordM],['منسقة الصحة المدرسية',c.coordF],['مدير/ة المركز',c.director],['الرقم الوزاري للمركز',c.ministry]].forEach((s,i)=>{
       const xx=PW-60-cw*(i+1)-6*i;RR(xx,sy,cw,64,8,i===3?NAVY:'#E6EDF4');
       T(s[0],xx+cw/2,sy+19,{sz:17,c:i===3?'#F3D77A':MUT,a:'center'});T(s[1]||'—',xx+cw/2,sy+44,{sz:22,w:700,c:i===3?'#F3D77A':NAVY,a:'center',max:cw-20});});
     // footer
@@ -1034,7 +1034,7 @@ function step1(){
     h('div',{class:'grid2'},
       field('منسق الصحة المدرسية',()=>S.center.coordM,v=>S.center.coordM=v,{ph:'الاسم الكامل'}),
       field('منسقة الصحة المدرسية',()=>S.center.coordF,v=>S.center.coordF=v,{ph:'الاسم الكامل'})),
-    field('مديرة المركز',()=>S.center.director,v=>S.center.director=v,{ph:'الاسم الكامل'}));};
+    field('مدير/ة المركز',()=>S.center.director,v=>S.center.director=v,{ph:'الاسم الكامل'}));};
   const pick=async cid=>{
     if(!cid){S.center.cid='';S.center.name='';pv.textContent=fullName(S.center);note.hidden=true;return;}
     const name=CENTERS[+cid.slice(1)-1];
@@ -1210,7 +1210,7 @@ function dashView(St){
   return h('div',{class:'dash'},
     h('div',{class:'lh'},h('div',{class:'lh-text'},['المملكة العربية السعودية','تجمع جازان الصحي',c.sector||'',fullName(c)].map(t=>h('div',null,t))),h('img',{src:A.logo,alt:''})),
     h('div',{class:'title'},h('h2',null,'الصحة المدرسية لوحة متابعة الإنجاز',h('span',{class:'t2'},c.period||''))),
-    h('div',{class:'strip'},h('div',null,h('span',{class:'lb'},'منسق الصحة المدرسية'),c.coordM||'—'),h('div',null,h('span',{class:'lb'},'منسقة الصحة المدرسية'),c.coordF||'—'),h('div',null,h('span',{class:'lb'},'مديرة المركز'),c.director||'—'),h('div',{class:'term'},h('span',{class:'lb'},'الرقم الوزاري للمركز'),h('span',{class:'num'},c.ministry||'—'))),
+    h('div',{class:'strip'},h('div',null,h('span',{class:'lb'},'منسق الصحة المدرسية'),c.coordM||'—'),h('div',null,h('span',{class:'lb'},'منسقة الصحة المدرسية'),c.coordF||'—'),h('div',null,h('span',{class:'lb'},'مدير/ة المركز'),c.director||'—'),h('div',{class:'term'},h('span',{class:'lb'},'الرقم الوزاري للمركز'),h('span',{class:'num'},c.ministry||'—'))),
     h('div',{class:'kp'},
       h('div',{class:'kpi main'},ring(R.pct,104,gcol(R.pct),12),h('div',null,h('span',{class:'lab'},'نسبة الإنجاز الكلية'),h('div',{class:'big num',style:`color:${gcol(R.pct)}`},pct(R.pct)),h('span',{class:'sub'},`${R.done} منجز من ${R.req} مستهدف`))),
       prog('scr','var(--teal)'),prog('aw','var(--gold)'),prog('vs','var(--warn)')),
