@@ -508,10 +508,10 @@ function buildTemplateXlsx(S){
   w1.set(8,0,'عدد المدارس (يُحسب تلقائياً)',LB);w1.set(8,1,{f:'COUNTA('+S2+'B'+a1+':B'+aN+')',v:sch.length},{b:1,c:COL.teal,bg:'F4F7FA',bd:1,sz:13});w1.height(8,28);
   w1.dv=[{sqref:'B4',list:CENTERS.join(',')}];
   // 2) بيانات المدارس
-  const w2=B.sheet(TPL.s,{tab:COL.teal,freeze:[2,3]});w2.cols=[5,40,12,14,18,24,24,13,24,15,26];
-  head(w2,'بيانات المدارس','اكتب كل مدرسة في صف. الأعمدة الستة الأولى مطلوبة، وبقية الأعمدة (الرمادية) اختيارية وتجهّز لك بطاقة الإدخال في منصة صحة. بقية الصفحات تأخذ أسماء المدارس من هنا تلقائياً.',11,COL.teal);
-  ['م','اسم المدرسة','الجنس','المرحلة','الرقم الوزاري للمدرسة','الموجه الصحي','مدير/ة المدرسة','نوع المدرسة','ممثل الكادر التعليمي','جوال الممثل','بريد الممثل'].forEach((t,i)=>w2.set(2,i,t,TH(i<6?COL.teal:'6B7785')));w2.height(2,30);
-  for(let i=0;i<TPL_N;i++){const r=TPL_R0+i,sc=sch[i];w2.set(r,0,i+1,{...CELL,c:COL.gray});w2.set(r,1,sc?sc.name:'',{...CELL,h:'right',bg:'FFFBE6'});w2.set(r,2,sc?sc.g:'',{...CELL,bg:'FFFBE6'});w2.set(r,3,sc?sc.st:'',{...CELL,bg:'FFFBE6'});w2.set(r,4,sc?String(sc.min||''):'',{...CELL,bg:'FFFBE6'});w2.set(r,5,sc?sc.guide:'',{...CELL,bg:'FFFBE6'});[sc&&sc.principal,sc&&sc.kind,sc&&sc.rep,sc&&sc.repTel,sc&&sc.repMail].forEach((v,j)=>w2.set(r,6+j,v||'',{...CELL,bg:'F4F7FA'}));w2.height(r,22);}
+  const w2=B.sheet(TPL.s,{tab:COL.teal,freeze:[2,3]});w2.cols=[5,40,12,14,18,24,24,13,24];
+  head(w2,'بيانات المدارس','اكتب كل مدرسة في صف. الأعمدة الستة الأولى مطلوبة، وبقية الأعمدة (الرمادية) اختيارية وتجهّز لك بطاقة الإدخال في منصة صحة. بقية الصفحات تأخذ أسماء المدارس من هنا تلقائياً.',9,COL.teal);
+  ['م','اسم المدرسة','الجنس','المرحلة','الرقم الوزاري للمدرسة','الموجه الصحي','مدير/ة المدرسة','نوع المدرسة','ممثل الكادر التعليمي'].forEach((t,i)=>w2.set(2,i,t,TH(i<6?COL.teal:'6B7785')));w2.height(2,30);
+  for(let i=0;i<TPL_N;i++){const r=TPL_R0+i,sc=sch[i];w2.set(r,0,i+1,{...CELL,c:COL.gray});w2.set(r,1,sc?sc.name:'',{...CELL,h:'right',bg:'FFFBE6'});w2.set(r,2,sc?sc.g:'',{...CELL,bg:'FFFBE6'});w2.set(r,3,sc?sc.st:'',{...CELL,bg:'FFFBE6'});w2.set(r,4,sc?String(sc.min||''):'',{...CELL,bg:'FFFBE6'});w2.set(r,5,sc?sc.guide:'',{...CELL,bg:'FFFBE6'});[sc&&sc.principal,sc&&sc.kind,sc&&sc.rep].forEach((v,j)=>w2.set(r,6+j,v||'',{...CELL,bg:'F4F7FA'}));w2.height(r,22);}
   w2.dv=[{sqref:`C${a1}:C${aN}`,list:'بنين,بنات'},{sqref:`D${a1}:D${aN}`,list:STAGES.join(',')},{sqref:`H${a1}:H${aN}`,list:'حكومية,أهلية'}];
   // 3) الفحص الاستكشافي
   const w3=B.sheet(TPL.f,{tab:'1B8A94',freeze:[2,3]});w3.cols=[5,40,16,16,12,14,22];
@@ -578,7 +578,7 @@ async function readTplXlsx(z,txt,doc,wd){
     if(!g)g=/بنات/.test(name)?'بنات':'بنين';
     if(!st)st=/ثانوي/.test(name)?'ثانوية':/متوسط/.test(name)?'متوسطة':'ابتدائية';
     const tot=n(gf,r,3);
-    S.schools.push(newSchool({name,g,st,min:normDigits(gs(r,4)),guide:gs(r,5),principal:gs(r,6),kind:gs(r,7),rep:gs(r,8),repTel:normDigits(gs(r,9)),repMail:gs(r,10),
+    S.schools.push(newSchool({name,g,st,min:normDigits(gs(r,4)),guide:gs(r,5),principal:gs(r,6),kind:gs(r,7),rep:gs(r,8),
       scr:{on:tot>0,grade:st==='متوسطة'?'الأول متوسط':st==='ثانوية'?'الأول ثانوي':'',total:tot,transf:n(gf,r,4),done:n(gf,r,5),s:normSt(gf(r,6))},
       s:{a1:normSt(ga(r,3)),a2:normSt(ga(r,4)),a3:normSt(ga(r,5)),a4:normSt(ga(r,6)),v1:normSt(gv(r,3)),v2:normSt(gv(r,4)),v3:normSt(gv(r,5))}}));
   }
