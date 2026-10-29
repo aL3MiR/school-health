@@ -255,6 +255,10 @@ var URL_='https://rzrwbrgebcylixjciega.supabase.co',KEY='eyJhbGciOiJIUzI1NiIsInR
 var sess=null;try{sess=JSON.parse(localStorage.getItem(SK)||'null')}catch(e){}
 function jwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch(e){return {}}}
 function owner(){return !!(sess&&sess.access_token&&jwt(sess.access_token).app_metadata&&jwt(sess.access_token).app_metadata.role==='owner'&&jwt(sess.access_token).exp*1000>Date.now()-60000)}
+function meta(){return (sess&&sess.access_token&&jwt(sess.access_token).exp*1000>Date.now()-60000&&jwt(sess.access_token).app_metadata)||{}}
+function coord(){var m=meta();return m.role==='coordinator'&&/^c\d\d$/.test(m.center||'')}
+function cen(){return coord()?meta().center:''}
+var CN=['بيش','بيش الجنوبي','الحقو','القوام','قايم الدش','العالية','السلامه العليا','العشة','المحلة','مسلية','المطعن','قرية بيش','الفطيحة','الخلاوية','الريث','مقزع','القهر','عمود','الجبل الأسود','السادة','الدرب','أبو السداد','الشقيق','منشبة','عتود'];
 async function refresh(){if(!sess||!sess.refresh_token)return;try{var r=await fetch(URL_+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:sess.refresh_token})});if(r.ok){sess=await r.json();localStorage.setItem(SK,JSON.stringify(sess))}else{sess=null;localStorage.removeItem(SK)}}catch(e){}}
 async function ensure(){if(sess&&jwt(sess.access_token).exp*1000<Date.now()+60000)await refresh()}
 async function api(path,opt){await ensure();opt=opt||{};var h=Object.assign({apikey:KEY,Authorization:'Bearer '+((sess&&sess.access_token)||KEY),'Content-Type':'application/json'},opt.headers||{});var r=await fetch(URL_+'/rest/v1/'+path,Object.assign({},opt,{headers:h}));if(!r.ok){var t='';try{t=(await r.text()).slice(0,200)}catch(x){}var e=new Error(r.status+' '+t);e.code=r.status;throw e}var tx=await r.text();return tx?JSON.parse(tx):null}
@@ -267,18 +271,18 @@ var DB={
  collection:function(t){return{onSnapshot:function(ok,err){var stop=false,last='';async function tick(){if(stop)return;try{var rows=await api(t+'?select=id,data');var s=JSON.stringify(rows);if(s!==last){last=s;ok({docs:rows.map(snapDoc)})}}catch(e){if(err&&!last){last='x';err(e)}}}tick();var iv=setInterval(function(){if(document.visibilityState==='visible')tick()},30000);return function(){stop=true;clearInterval(iv)}}}}
 };
 var DL={save:async function(o){var b=o.data instanceof Blob?o.data:new Blob([o.data]);var u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=o.filename;document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},4000)}};
-window.claude={use:async function(n){if(n==='db')return DB;if(n==='user')return {isOwner:owner};if(n==='downloads')return DL;throw new Error('unknown')}};
-window.SB={isOwner:owner,logout:function(){sess=null;try{localStorage.removeItem(SK)}catch(e){}location.reload()},
- login:async function(email,pw){var r=await fetch(URL_+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});if(!r.ok)throw new Error('bad');sess=await r.json();if(!owner()){sess=null;throw new Error('notowner')}localStorage.setItem(SK,JSON.stringify(sess));location.reload()}};
+window.claude={use:async function(n){if(n==='db')return DB;if(n==='user')return {isOwner:owner,canEdit:function(){return owner()||coord()},center:cen};if(n==='downloads')return DL;throw new Error('unknown')}};
+window.SB={isOwner:owner,isCoord:coord,center:cen,logout:function(){sess=null;try{localStorage.removeItem(SK)}catch(e){}location.reload()},
+ login:async function(email,pw){var r=await fetch(URL_+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({email:email,password:pw})});if(!r.ok)throw new Error('bad');sess=await r.json();if(!owner()&&!coord()){sess=null;throw new Error('notowner')}localStorage.setItem(SK,JSON.stringify(sess));location.reload()}};
 /* زر دخول المشرف */
-function ui(){var b=document.createElement('button');b.type='button';b.textContent=owner()?'خروج المشرف':'دخول المشرف';
+function ui(){var b=document.createElement('button');b.type='button';b.textContent=owner()?'خروج المشرف':coord()?'خروج منسق '+CN[+cen().slice(1)-1]:'تسجيل الدخول';
  b.style.cssText='position:fixed;bottom:10px;left:10px;z-index:99;font:12px inherit;font-family:inherit;padding:5px 11px;border-radius:14px;border:1px solid #9aa8b5;background:rgba(255,255,255,.85);color:#445;opacity:.55;cursor:pointer';
  b.onmouseenter=function(){b.style.opacity=1};b.onmouseleave=function(){b.style.opacity=.55};
- b.onclick=function(){if(owner()){SB.logout();return}
+ b.onclick=function(){if(owner()||coord()){SB.logout();return}
   var o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;direction:rtl;font-family:inherit';
-  o.innerHTML='<form style="background:#fff;color:#17212B;padding:22px;border-radius:12px;width:min(340px,90vw);display:grid;gap:10px"><b style="font-size:17px">دخول المشرف</b><input name=e type=email placeholder="البريد الإلكتروني" autocapitalize=off autocomplete=email required style="padding:9px;border:1px solid #8a97a6;border-radius:8px;font:inherit;font-size:16px;direction:ltr;background:#fff;color:#17212B;-webkit-text-fill-color:#17212B;color-scheme:light"><input name=p type=password placeholder="كلمة المرور" autocomplete=current-password required style="padding:9px;border:1px solid #8a97a6;border-radius:8px;font:inherit;font-size:16px;direction:ltr;background:#fff;color:#17212B;-webkit-text-fill-color:#17212B;color-scheme:light"><div class=m style="color:#B5352A;font-size:13px;min-height:16px"></div><div style="display:flex;gap:8px"><button style="flex:1;padding:9px;border:0;border-radius:8px;background:#0F2C46;color:#fff;font:inherit">دخول</button><button type=button class=c style="padding:9px 14px;border:1px solid #ccd;border-radius:8px;background:#fff;font:inherit">إلغاء</button></div></form>';
-  document.body.appendChild(o);var f=o.firstChild;f.querySelector('.c').onclick=function(){o.remove()};
-  f.onsubmit=async function(ev){ev.preventDefault();var m=f.querySelector('.m');m.textContent='جارٍ الدخول…';try{await SB.login(f.e.value.trim(),f.p.value)}catch(x){m.textContent=x.message==='notowner'?'هذا الحساب ليس حساب المشرف.':'بيانات الدخول غير صحيحة.'}}};
+  o.innerHTML='<form style="background:#fff;color:#17212B;padding:22px;border-radius:12px;width:min(340px,90vw);display:grid;gap:10px"><b style="font-size:17px">تسجيل الدخول</b><select name=c style="padding:9px;border:1px solid #8a97a6;border-radius:8px;font:inherit;font-size:16px;background:#fff;color:#17212B;-webkit-text-fill-color:#17212B;color-scheme:light"><option value="">اختر مركزك…</option>'+CN.map(function(n,i){return '<option value="c'+(i<9?'0':'')+(i+1)+'">منسق '+n+'</option>'}).join('')+'<option value="sup">مشرف القطاع</option></select><input name=e type=email hidden placeholder="البريد الإلكتروني" autocapitalize=off autocomplete=email required style="padding:9px;border:1px solid #8a97a6;border-radius:8px;font:inherit;font-size:16px;direction:ltr;background:#fff;color:#17212B;-webkit-text-fill-color:#17212B;color-scheme:light"><input name=p type=password placeholder="كلمة المرور" autocomplete=current-password required style="padding:9px;border:1px solid #8a97a6;border-radius:8px;font:inherit;font-size:16px;direction:ltr;background:#fff;color:#17212B;-webkit-text-fill-color:#17212B;color-scheme:light"><div class=m style="color:#B5352A;font-size:13px;min-height:16px"></div><div style="display:flex;gap:8px"><button style="flex:1;padding:9px;border:0;border-radius:8px;background:#0F2C46;color:#fff;font:inherit">دخول</button><button type=button class=c style="padding:9px 14px;border:1px solid #ccd;border-radius:8px;background:#fff;font:inherit">إلغاء</button></div></form>';
+  document.body.appendChild(o);var f=o.firstChild;f.c.onchange=function(){f.e.hidden=f.c.value!=='sup';f.e.required=f.c.value==='sup'};f.querySelector('.c').onclick=function(){o.remove()};
+  f.onsubmit=async function(ev){ev.preventDefault();var m=f.querySelector('.m');m.textContent='جارٍ الدخول…';try{if(!f.c.value){m.textContent='اختر مركزك أو «مشرف القطاع».';return}await SB.login(f.c.value==='sup'?f.e.value.trim():f.c.value+'@sh-north.example',f.p.value)}catch(x){m.textContent=x.message==='notowner'?'هذا الحساب غير مخوّل.':'بيانات الدخول غير صحيحة.'}}};
  document.body.appendChild(b)}
 if(document.body)ui();else document.addEventListener('DOMContentLoaded',ui);
 })();
@@ -870,8 +874,8 @@ const SAMPLE=[{"name": "ابتدائية السلامه العليا", "g": "ب�
 const KEY='sh-hub-v1';
 let S=newState(),V={view:'home',step:0,open:null,sec:[],secOpen:null},saveT;
 function lsGet(){try{return localStorage.getItem(KEY);}catch(e){return null;}}
-let DB=null,OWN=false,DBREADY=false,wr=false,again=false,SVST={k:'local'};
-(async()=>{try{if(typeof claude!=='undefined')DB=await claude.use('db');}catch(e){DB=null;}try{const u=await claude.use('user');OWN=!!(u&&u.isOwner());}catch(e){OWN=false;}DBREADY=true;setStatus(DB&&OWN?(S.center.cid?'saved':'ready'):'local');if(V.view==='sector'||V.view==='home')render(true);})();
+let DB=null,OWN=false,SUP=false,CEN='',DBREADY=false,wr=false,again=false,SVST={k:'local'};
+(async()=>{try{if(typeof claude!=='undefined')DB=await claude.use('db');}catch(e){DB=null;}try{const u=await claude.use('user');SUP=!!(u&&u.isOwner());CEN=(u&&u.center&&u.center())||'';OWN=!!(u&&(u.canEdit?u.canEdit():u.isOwner()));}catch(e){OWN=false;}DBREADY=true;setStatus(DB&&OWN?(S.center.cid?'saved':'ready'):'local');if(V.view==='sector'||V.view==='home')render(true);})();
 function setStatus(k,msg){SVST={k,msg};const el=$('#saved');if(!el)return;
   const T={local:['warn','عملك محفوظ على جهازك فقط ولا يصل لمشرف الصحة المدرسية بالقطاع إلا بإرسال الملف. حمّل ملف Excel في الخطوة الأخيرة وأرسله.'],
    ready:['ok','اختر مركزك في الخطوة الأولى ليُحفظ عملك على المنصة تلقائياً.'],
@@ -883,13 +887,14 @@ function summaryDoc(St){const R=calc(St);return {cid:St.center.cid,name:St.cente
   updated:Date.now(),schools:St.schools.length,req:R.req,done:R.done,pct:R.pct,scrPct:R.prog.scr.pct,awPct:R.prog.aw.pct,vsPct:R.prog.vs.pct,entPct:R.entPct,state:JSON.stringify(St)};}
 async function remoteSave(){
   if(!DB||!OWN||!S.center.cid||S.sample)return;
+  if(CEN&&S.center.cid!==CEN){setStatus('error','هذا الحساب مخصص لـ'+FN(CENTERS[+CEN.slice(1)-1])+' فقط. اختر مركزك في الخطوة الأولى. عملك محفوظ على جهازك.');return false;}
   if(wr){again=true;return;}wr=true;let ok=false;
   try{setStatus('saving');await DB.doc('centers/'+S.center.cid).set(summaryDoc(S));setStatus('saved');ok=true;}
-  catch(e){console.error(e);setStatus('error',e&&(e.code===401||e.code===403)?'انتهت جلسة المشرف أو لا تملك صلاحية الحفظ ('+e.code+'). اخرج ثم ادخل كمشرف من جديد. عملك محفوظ على جهازك.':'تعذّر الحفظ على المنصة ('+((e&&e.message)||'خطأ')+'). عملك محفوظ على جهازك، فحمّل ملف Excel.');return false;}
+  catch(e){console.error(e);setStatus('error',e&&(e.code===401||e.code===403)?'انتهت الجلسة أو لا تملك صلاحية حفظ هذا المركز ('+e.code+'). اخرج ثم سجّل الدخول من جديد. عملك محفوظ على جهازك.':'تعذّر الحفظ على المنصة ('+((e&&e.message)||'خطأ')+'). عملك محفوظ على جهازك، فحمّل ملف Excel.');return false;}
   finally{wr=false;if(again){again=false;remoteSave();}}
   return ok;
 }
-function persist(){clearTimeout(saveT);if(DB&&OWN&&S.center.cid&&!S.sample)setStatus('pending');saveT=setTimeout(()=>{try{S.updated=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}remoteSave();},700);}
+function persist(){clearTimeout(saveT);if(DB&&OWN&&S.center.cid&&!S.sample&&(!CEN||S.center.cid===CEN))setStatus('pending');saveT=setTimeout(()=>{try{S.updated=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}remoteSave();},700);}
 function dirty(){persist();}
 let dl=null;
 async function saveFile(name,blob){
@@ -934,7 +939,7 @@ function brand(){
 /* ===================== الرئيسية ===================== */
 function home(){
   const saved=lsGet();let sv=null;try{sv=saved?JSON.parse(saved):null;}catch(e){}
-  const hasSaved=sv&&sv.center&&(sv.center.name||sv.schools.length);
+  const hasSaved=sv&&sv.center&&(sv.center.name||sv.schools.length)&&(!CEN||sv.center.cid===CEN);
   const el=h('div',null,
     h('section',{class:'hero'},
       h('h1',null,'متابعة إنجاز الصحة المدرسية في مراكز القطاع الشمالي'),
@@ -949,6 +954,7 @@ function home(){
         )),
     h('section',{class:'notice'},ic('spark'),h('div',null,h('b',null,'تنويه مهم: الزيارة التأكيدية الثانية والثالثة للبيئة المدرسية والمقاصف'),
       h('p',null,'حتى يظهر نوع الزيارة «تأكيدية» في منصة صحة وتنعكس على المؤشر، اختر عند الإدخال نوع المدخل: ',h('b',null,'فرع / مكتب / قسم هيئة الصحة العامة'),'، وذلك إلى حين معالجة التحدي في الانعكاس.'))),
+    CEN?h('div',{class:'resume'},h('span',null,'تم الدخول كمنسق '+FN(CENTERS[+CEN.slice(1)-1])+'. يمكنك تحديث بيانات مركزك فقط.'),h('button',{class:'btn sm pri',type:'button',onclick:()=>{S=newState();V.view='wiz';V.step=0;render();}},'فتح بيانات مركزي')):null,
     hasSaved?h('div',{class:'resume'},h('span',null,'لديك عمل محفوظ على هذا الجهاز: '+(sv.center.name?FN(sv.center.name):'مركز بدون اسم')+' ('+sv.schools.length+' مدرسة)'),
       h('span',{style:'display:flex;gap:8px'},h('button',{class:'btn sm pri',type:'button',onclick:()=>{S=sv;V.view='wiz';V.step=sv.schools.length?2:0;render();}},'متابعة العمل'),
       h('button',{class:'btn sm ghost',type:'button',onclick:()=>{try{localStorage.removeItem(KEY);}catch(e){}render();}},'حذف المحفوظ'))):null,
@@ -1008,7 +1014,7 @@ function navBar(){
   const i=V.step;
   return h('div',{class:'nav'},
     i>0?h('button',{class:'btn',type:'button',onclick:()=>goStep(i-1)},'السابق'):h('span'),
-    h('button',{class:'btn ghost',type:'button',onclick:async(ev)=>{const b=ev.currentTarget;if(!(DB&&OWN)){toast('الحفظ على المنصة متاح للمشرف بعد تسجيل الدخول. عملك محفوظ على جهازك.');return;}if(!S.center.cid){toast('اختر مركزك أولاً في الخطوة الأولى.');return;}clearTimeout(saveT);try{S.updated=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}b.disabled=true;const r=await remoteSave();b.disabled=false;toast(r?'تم الحفظ على المنصة ✓':'تعذّر الحفظ، راجع الرسالة في أعلى الصفحة.');}},'حفظ'),
+    h('button',{class:'btn ghost',type:'button',onclick:async(ev)=>{const b=ev.currentTarget;if(!(DB&&OWN)){toast('الحفظ على المنصة متاح بعد تسجيل الدخول (زر «تسجيل الدخول» أسفل يسار الصفحة). عملك محفوظ على جهازك.');return;}if(!S.center.cid){toast('اختر مركزك أولاً في الخطوة الأولى.');return;}clearTimeout(saveT);try{S.updated=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}b.disabled=true;const r=await remoteSave();b.disabled=false;toast(r?'تم الحفظ على المنصة ✓':'تعذّر الحفظ، راجع الرسالة في أعلى الصفحة.');}},'حفظ'),
     i<5?h('button',{class:'btn pri',type:'button',onclick:()=>goStep(i+1)},i===4?'المراجعة والتحميل':'التالي'):h('span'));
 }
 function sampleBanner(){
@@ -1028,7 +1034,7 @@ function step1(){
   const note=h('div',{class:'note',hidden:true});
   const pv=h('div',{class:'note'},fullName(c));
   const sel=h('select',{class:'in',id:'name','aria-label':'اختر المركز'},h('option',{value:''},'اختر مركزك…'),CENTERS.map((n,i)=>h('option',{value:cidOf(i)},FN(n))));
-  sel.value=c.cid||'';
+  sel.value=CEN||c.cid||'';if(CEN){sel.disabled=true;}
   const rest=h('div',{class:'stack'});
   const paintRest=()=>{pv.textContent=fullName(S.center);rest.replaceChildren(
     h('div',{class:'grid2'},
@@ -1055,7 +1061,8 @@ function step1(){
   };
   sel.addEventListener('change',e=>pick(e.target.value));
   paintRest();
-  return h('section',{class:'panel'},h('h2',null,'بيانات المركز'),h('p',{class:'lead'},'اختر مركزك من مراكز القطاع الشمالي. إن كان لديه عمل محفوظ يُفتح تلقائياً.'),
+  if(CEN&&S.center.cid!==CEN)setTimeout(()=>pick(CEN),0);
+  return h('section',{class:'panel'},h('h2',null,'بيانات المركز'),h('p',{class:'lead'},CEN?'حسابك مخصص لـ'+FN(CENTERS[+CEN.slice(1)-1])+' فقط، ويُفتح عملك المحفوظ تلقائياً.':'اختر مركزك من مراكز القطاع الشمالي. إن كان لديه عمل محفوظ يُفتح تلقائياً.'),
     h('div',{class:'stack'},
       h('div',{class:'field'},h('label',{for:'name'},'المركز'),sel),
       note,pv,rest));
@@ -1280,7 +1287,7 @@ function sector(){
         h('span',{class:'hide-m'},R?bar(R.pct,gcol(R.pct)):null),
         h('span',{class:'pc num hide-m'},R?pct(R.prog.scr.pct):''),h('span',{class:'pc num hide-m'},R?pct(R.prog.aw.pct):''),h('span',{class:'pc num hide-m'},R?pct(R.prog.vs.pct):''),
         h('span',{class:'pc'},R?h('b',{class:'num',style:`color:${gcol(R.pct)}`},pct(R.pct)):h('span',{class:'pill warn'},'لم يبدأ'))));
-      if(S2&&V.secOpen===e.cid){const del=OWN&&DB&&e.doc?h('button',{class:'btn sm danger',type:'button',style:'margin-bottom:12px',onclick:async()=>{if(!del.dataset.arm){del.dataset.arm='1';del.textContent='اضغط مرة أخرى للتأكيد: حذف بيانات '+FN(e.name);setTimeout(()=>{delete del.dataset.arm;del.textContent='حذف بيانات المركز';},5000);return;}del.disabled=true;try{await DB.doc('centers/'+e.cid).delete();V.secOpen=null;toast('تم حذف بيانات '+FN(e.name));}catch(er){del.disabled=false;toast('تعذّر الحذف.');}}},'حذف بيانات المركز'):null;
+      if(S2&&V.secOpen===e.cid){const del=SUP&&DB&&e.doc?h('button',{class:'btn sm danger',type:'button',style:'margin-bottom:12px',onclick:async()=>{if(!del.dataset.arm){del.dataset.arm='1';del.textContent='اضغط مرة أخرى للتأكيد: حذف بيانات '+FN(e.name);setTimeout(()=>{delete del.dataset.arm;del.textContent='حذف بيانات المركز';},5000);return;}del.disabled=true;try{await DB.doc('centers/'+e.cid).delete();V.secOpen=null;toast('تم حذف بيانات '+FN(e.name));}catch(er){del.disabled=false;toast('تعذّر الحذف.');}}},'حذف بيانات المركز'):null;
         tb.append(h('div',{style:'padding:16px;border-bottom:1px solid var(--line)'},del,dashView(S2)));}};
     started.forEach((r,i)=>row(r.e,r.R,i));notStarted.forEach(e=>row(e,null,0));
     list.append(tb,h('div',{style:'display:flex;gap:10px;flex-wrap:wrap'},
@@ -1292,7 +1299,7 @@ function sector(){
     const bad=[];V.sec=V.sec||[];V.pend=V.pend||[];
     for(const f of files){try{
       const st=await readAnyFile(f);const cid=cidFor(st);
-      if(DB&&cid){const o={S:st,file:f.name,cid};const i=V.pend.findIndex(x=>x.cid===cid);if(i>=0)V.pend[i]=o;else V.pend.push(o);}
+      if(DB&&SUP&&cid){const o={S:st,file:f.name,cid};const i=V.pend.findIndex(x=>x.cid===cid);if(i>=0)V.pend[i]=o;else V.pend.push(o);}
       else{const i=V.sec.findIndex(x=>x.S.center.name===st.center.name&&x.S.center.ministry===st.center.ministry);const o={S:st,file:f.name};if(i>=0)V.sec[i]=o;else V.sec.push(o);}
     }catch(e){bad.push(f.name);}}
     paint();if(bad.length)toast('تعذّر قراءة: '+bad.join('، '));
