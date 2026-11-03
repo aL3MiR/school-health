@@ -1,7 +1,7 @@
 import shutil,os,re,sys
 R=lambda p:open(p,encoding='utf8').read()
 KEY=os.environ.get('SB_ANON','__ANON__')
-sb=R('sb.js').replace('__ANON__',KEY)
+sb=R('shbar.js')+'\n'+R('sb.js').replace('__ANON__',KEY)
 OG=lambda t,d,img,path:f'''<meta property="og:type" content="website"><meta property="og:title" content="{t}"><meta property="og:description" content="{d}"><meta property="og:image" content="{img}"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:site_name" content="منصة الصحة المدرسية - القطاع الشمالي"><meta property="og:url" content="https://school-health-north.pages.dev{path}"><meta property="og:locale" content="ar_SA"><meta name="twitter:card" content="summary_large_image"><meta name="description" content="{d}">'''
 # hub
 h=R('/home/claude/hub/page.html')
