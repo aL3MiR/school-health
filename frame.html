@@ -1,0 +1,30 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>عرض الجوال</title>
+<style>:root{--bg:#dfe6ec}:root[data-theme=dark]{--bg:#0a0f14}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+iframe{width:430px;max-width:100vw;height:min(880px,calc(100vh - 28px));border:10px solid #1b2733;border-radius:34px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.35)}</style></head>
+<body><iframe id="f" title="عرض الجوال"></iframe>
+<script>
+(function(){
+var ls=function(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null};
+var u=new URLSearchParams(location.search).get('u')||'/';if(u.charAt(0)!=='/'||u.indexOf('//')===0)u='/';
+var fr=document.getElementById('f');
+if(Math.min(screen.width,screen.height)<700){location.replace(u)}
+function theme(){return document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}
+if(ls('sh_theme'))document.documentElement.setAttribute('data-theme',ls('sh_theme'));
+ls('sh_view','m');fr.src=u;
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);ls('sh_theme',t);try{fr.contentDocument.documentElement.setAttribute('data-theme',t)}catch(e){}}
+var IC={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',phone:'<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18h2"/>',desk:'<rect x="2.5" y="4" width="19" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>'};
+function svg(n){return '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>'}
+function mk(label,icon,fn){var b=document.createElement('button');b.type='button';b.title=label;b.setAttribute('aria-label',label);b.innerHTML=svg(icon);
+ b.style.cssText='width:38px;height:38px;border-radius:50%;border:1px solid rgba(120,135,150,.55);background:rgba(255,255,255,.92);color:#26384a;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.18)';
+ b.onclick=fn;return b}
+
+var d=document.createElement('div');d.style.cssText='position:fixed;bottom:12px;left:12px;z-index:99;display:flex;gap:8px;align-items:center';
+var lb=mk('','user',function(){try{var w=fr.contentWindow;if(w.SB.isOwner()||w.SB.isCoord())w.SB.logout();else w.SBopenLogin()}catch(e){}});
+var tb=mk('','moon',function(){setTheme(theme()==='dark'?'light':'dark');paint()});
+var vb=mk('عرض الكمبيوتر','desk',function(){ls('sh_view',null);location.replace(u)});
+function paint(){var dk=theme()==='dark';tb.innerHTML=svg(dk?'sun':'moon');tb.title=dk?'الوضع النهاري':'الوضع الداكن';tb.setAttribute('aria-label',tb.title);lb.innerHTML=svg('user');lb.title='تسجيل الدخول / الخروج';lb.setAttribute('aria-label',lb.title);vb.innerHTML=svg('desk');
+ [tb,vb,lb].forEach(function(b){b.style.background=dk?'rgba(27,42,55,.95)':'rgba(255,255,255,.92)';b.style.color=dk?'#e6edf3':'#26384a'})}
+fr.addEventListener('load',function(){try{if(ls('sh_theme'))fr.contentDocument.documentElement.setAttribute('data-theme',ls('sh_theme'));var w=fr.contentWindow;var li=w.SB&&(w.SB.isOwner()||w.SB.isCoord());lb.innerHTML=svg(li?'out':'user');lb.title=li?'تسجيل الخروج':'تسجيل الدخول'}catch(e){}});
+d.append(lb,tb,vb);paint();document.body.appendChild(d);
+})();
+</script></body></html>
