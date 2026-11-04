@@ -360,6 +360,29 @@ dl.addEventListener('click',async function(e){
   dl.lastChild.textContent=old;
 })});
 S=DATA.schools.slice().sort(function(a,b){return a.order-b.order});META=DATA.meta;stamp();render();
+/* ربط مع المنصة العامة: تُقرأ حالات مركز السلامه العليا (c07) من قاعدة المنصة وتحلّ محل البيانات المضمّنة */
+function mergeHub(row){
+  var d=row&&row.data;if(!d)return false;var st;try{st=JSON.parse(d.state)}catch(e){return false}
+  if(!st||!st.schools||!st.items)return false;
+  var nm={};st.items.forEach(function(i){nm[i.n]=i.k});
+  var by={};st.schools.forEach(function(h){by[(h.min||'')+'|'+h.g]=h;by[h.name+'|'+h.g]=h});
+  var hit=0;
+  S.forEach(function(s){
+    var h=by[s.ministry+'|'+s.gender]||by[s.name+'|'+s.gender];if(!h)return;hit++;
+    s.items.forEach(function(it){var k=nm[it.k];if(!k||!h.s)return;var v=+h.s[k]||0;it.f=v>0?1:0;it.e=v===2?1:0});
+    if(s.screen&&h.scr&&h.scr.on){var x=s.screen,y=h.scr,v=+y.s||0;x.total=+y.total||0;x.transf=+y.transf||0;x.screened=+y.done||0;if(y.grade)x.grade=y.grade;x.f=v>0?1:0;x.e=v===2?1:0}
+  });
+  if(!hit)return false;
+  var t=+d.updated||(row.updated_at?Date.parse(row.updated_at):0);if(t)META={updated:new Date(t).toISOString()};
+  return true;
+}
+async function syncHub(){
+  try{var db=await window.claude.use('db');if(!db)return;
+    var snap=await db.doc('centers/c07').get();if(!snap.exists)return;
+    var d=snap.data();if(mergeHub({data:d})){stamp();render()}
+  }catch(e){}
+}
+syncHub();setInterval(function(){if(document.visibilityState==='visible')syncHub()},60000);
 (async function(){try{
   var user=await window.claude.use('user');if(!user||!user.isOwner())return;
   var db=await window.claude.use('db');if(!db)return;
