@@ -238,6 +238,7 @@ function render(){
   var L=visible(),T=total(L);
   if(!S.length){$('main').innerHTML='<div class="empty">لا توجد بيانات بعد. ستظهر المدارس هنا حال إضافتها.</div>';return}
   var sc=prog(L,'sc'),aw=prog(L,'aw'),vs=prog(L,'vs'),ov=grade(T.pct);
+  try{if(window.parent!==window){var TA=total(S);window.parent.postMessage({src:'sh-salama',v:1,pct:TA.pct,epct:TA.epct,n:S.length,boys:S.filter(function(x){return x.gender==='بنين'}).length,girls:S.filter(function(x){return x.gender==='بنات'}).length,sc:prog(S,'sc').pct,aw:prog(S,'aw').pct,vs:prog(S,'vs').pct,updated:META&&META.updated},'*')}}catch(e){}
   var h='';
   /* schools register */
   h+='<h2>بيانات المدارس</h2><div class="scroll"><table><thead><tr><th>م</th><th class="l">المدرسة</th><th>الفئة</th><th>المرحلة</th><th>الرقم الوزاري</th><th>الموجه الصحي</th></tr></thead><tbody>';
