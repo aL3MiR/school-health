@@ -996,7 +996,7 @@ function brand(){
 /* ===================== الرئيسية ===================== */
 function home(){
   const saved=lsGet();let sv=null;try{sv=saved?JSON.parse(saved):null;}catch(e){}
-  const hasSaved=sv&&sv.center&&(sv.center.name||sv.schools.length)&&(!CEN||sv.center.cid===CEN);
+  const hasSaved=sv&&sv.center&&(sv.center.name||sv.schools.length)&&!(DB&&OWN);
   const el=h('div',null,
     h('section',{class:'hero'},
       h('h1',null,'متابعة إنجاز الصحة المدرسية في مراكز القطاع الشمالي'),
