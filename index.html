@@ -110,6 +110,8 @@ td.cp{line-height:1.3}td.cp b{display:block;font-size:15px}td.cp small{display:b
 .in:focus{border-color:var(--teal);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 25%,transparent)}
 .in.bad{border-color:var(--bad)}
 .err{color:var(--bad);font-size:13px;font-weight:700}
+.savefab{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:60}.savefab .btn{box-shadow:0 6px 22px rgba(0,0,0,.35);padding:12px 30px;font-size:17px;border-radius:26px}
+@media print{.savefab{display:none}}
 .nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
 .nav .hint{color:var(--muted);font-size:13px;align-self:center}
 /* segmented */
@@ -1065,12 +1067,24 @@ function goStep(i){
   const e=validate(i);if(e){V.step=e.step;render();toast(e.msg);return;}
   V.step=i;render();
 }
+async function saveNow(b){
+  if(!(DB&&OWN)){toast('الحفظ على المنصة متاح بعد تسجيل الدخول (زر «تسجيل الدخول» أعلى الصفحة). عملك محفوظ على جهازك.');return;}
+  if(!S.center.cid){toast('اختر مركزك أولاً في الخطوة الأولى.');return;}
+  clearTimeout(saveT);try{S.updated=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  const t=b&&b.textContent;if(b){b.disabled=true;b.textContent='جارٍ الحفظ…';}
+  const r=await remoteSave();
+  if(b){b.disabled=false;b.textContent=r?'تم الحفظ ✓':'تعذّر الحفظ';setTimeout(()=>{b.textContent='حفظ';},2200);}
+  toast(r?'تم الحفظ على المنصة ✓':'تعذّر الحفظ، راجع الرسالة في أعلى الصفحة.');
+}
 function navBar(){
   const i=V.step;
   return h('div',{class:'nav'},
     i>0?h('button',{class:'btn',type:'button',onclick:()=>goStep(i-1)},'السابق'):h('span'),
-    h('button',{class:'btn ghost',type:'button',onclick:async(ev)=>{const b=ev.currentTarget;if(!(DB&&OWN)){toast('الحفظ على المنصة متاح بعد تسجيل الدخول (زر «تسجيل الدخول» أسفل يسار الصفحة). عملك محفوظ على جهازك.');return;}if(!S.center.cid){toast('اختر مركزك أولاً في الخطوة الأولى.');return;}clearTimeout(saveT);try{S.updated=Date.now();localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}b.disabled=true;const r=await remoteSave();b.disabled=false;toast(r?'تم الحفظ على المنصة ✓':'تعذّر الحفظ، راجع الرسالة في أعلى الصفحة.');}},'حفظ'),
+    h('button',{class:'btn ghost',type:'button',onclick:ev=>saveNow(ev.currentTarget)},'حفظ'),
     i<5?h('button',{class:'btn pri',type:'button',onclick:()=>goStep(i+1)},i===4?'المراجعة والتحميل':'التالي'):h('span'));
+}
+function saveFab(){
+  return h('div',{class:'savefab'},h('button',{class:'btn pri',type:'button',title:'حفظ التعديلات على المنصة',onclick:ev=>saveNow(ev.currentTarget)},ic('check'),'حفظ'));
 }
 function sampleBanner(){
   return S.sample?h('div',{class:'resume'},h('span',null,'هذه بيانات مثال لمركز السلامه العليا. ابدأ ببياناتك لتحلّ محلها.'),h('button',{class:'btn sm pri',type:'button',onclick:()=>{S=newState();V.step=0;render();}},'ابدأ ببياناتي')):null;
@@ -1080,6 +1094,7 @@ function wizard(){
   if(V.step===0)el.append(h('section',{class:'panel',style:'margin-bottom:12px'},h('h3',{class:'sec',style:'margin-top:0'},'تفضّل التعبئة خارج المنصة؟'),h('p',{class:'lead'},'حمّل ملف الإدخال وعبّئه ثم أرسله لمشرف الصحة المدرسية بالقطاع، أو أكمل الخطوات هنا مباشرة.'),h('div',{style:'display:flex;gap:10px;flex-wrap:wrap'},h('button',{class:'btn ghost',type:'button',onclick:dlInputPdf},ic('down'),'تحميل ملف الإدخال للمنسقين (PDF)'),h('button',{class:'btn ghost',type:'button',onclick:()=>saveFile('ملف_إدخال_الصحة_المدرسية.xlsx',buildTemplateXlsx(null))},ic('down'),'تحميل ملف الإدخال للمنسقين (Excel)'))));
   const p=[step1,step2,stepScr,stepAw,stepVs,step5][V.step]();
   el.append(p);if(V.step<5)el.append(navBar());
+  if(DB&&OWN&&!S.sample)el.append(h('div',{style:'height:64px'}),saveFab());
   setTimeout(()=>setStatus(S.sample?'local':!DBREADY?'chk':!(DB&&OWN)?'local':S.center.cid?(SVST.k==='error'?'error':'saved'):'ready',SVST.msg),0);
   return el;
 }
